@@ -652,8 +652,8 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
       <div class="auth-panel active" id="lobbyLogin">
         <div class="auth-error" id="loginError">Incorrect username or password.</div>
         <div class="auth-field">
-          <label>Username</label>
-          <input type="text" id="loginUser" placeholder="Enter Username">
+          <label>Username or Email</label>
+          <input type="text" id="loginUser" placeholder="Enter Username or Email">
         </div>
         <div class="auth-field">
           <label>Password</label>
@@ -1523,13 +1523,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
 
 <script>
 // ── ACCOUNTS ──
-const ACCOUNTS = {
-  'test':   { password:'test',  username:'TestUser', role:'user',  subscription: { product:'Rose Executor', plan:'Lifetime', key:'ROSE-A3F2-K91X-7TZQ', expires:'Never', status:'active' } },
-  'admin':  { password:'admin', username:'Admin',    role:'admin', subscription: { product:'Rose Executor', plan:'Lifetime', key:'ROSE-ADM1-N000-0001', expires:'Never', status:'active' } },
-  'nova':   { password:'nova',  username:'NovaUser', role:'user',  subscription: null },
-  'owner1': { password:'owner1', username:'Owner',   role:'owner', subscription: { product:'Rose Executor', plan:'Lifetime', key:'ROSE-OWN1-R000-0001', expires:'Never', status:'active' } },
-  'owner2': { password:'owner2', username:'Co-Owner', role:'owner', subscription: { product:'Rose Executor', plan:'Lifetime', key:'ROSE-OWN2-R000-0002', expires:'Never', status:'active' } },
-};
+// Real accounts now live in the Supabase database — no more fake local accounts.
 
 // ── STATE ──
 let isGuest = true;
@@ -1576,6 +1570,24 @@ requestAnimationFrame(animWave);
 // Sync stock badges on load
 // Sync stock when needed via showProductDetail and enterApp
 setInterval(syncShopStock, 1000);
+
+// ── SESSION PERSISTENCE: check if already logged in ──
+async function checkSession(){
+  try{
+    const res = await fetch('/api/me');
+    if(res.ok){
+      const data = await res.json();
+      currentAccount = data.user;
+      profileData.username = data.user.username;
+      if(data.user.bio) profileData.bio = data.user.bio;
+      if(data.user.country) profileData.country = data.user.country;
+      enterApp(false);
+    }
+  }catch(e){
+    // not logged in, stay on lobby page
+  }
+}
+checkSession();
 function updateClock(){
   const tz=profileData.timezone;
   if(!tz){document.getElementById('profileTime').textContent='—';return;}
@@ -1599,7 +1611,9 @@ function showShopListing(){
 
 document.getElementById('termsModal').addEventListener('click',function(e){if(e.target===this)this.style.display='none';});
 
-function doLogout(){
+async function doLogout(){
+  try{ await fetch('/api/logout', { method:'POST' }); }catch(e){}
+  currentAccount = null;
   showPage('lobbyPage');
   isGuest = true;
   // reset login fields
@@ -1938,24 +1952,34 @@ function updateForumAccess(){
 const keyStore = []; // { key, product, type, claimedBy, date, status:'unclaimed'|'claimed'|'suspended', frozen:false }
 let trialsFrozen = false;
 
-function addKey(){
+async function addKey(){
   const keyVal = document.getElementById('newKeyInput').value.trim().toUpperCase();
   const product = document.getElementById('newKeyProduct').value;
   const type    = document.getElementById('newKeyType').value;
   const msg     = document.getElementById('addKeyMsg');
   if(!keyVal){ showMsg(msg,'Please enter a key.','#ff6688'); return; }
-  if(keyStore.find(k=>k.key===keyVal)){ showMsg(msg,'Key already exists.','#ffaa44'); return; }
-  keyStore.push({
-    key:keyVal, product, type,
-    claimedBy:'—',
-    date: new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
-    status:'unclaimed'
-  });
-  document.getElementById('newKeyInput').value='';
-  showMsg(msg,'✓ Key added!','var(--green)');
-  renderStockTables();
-  // also add to VALID_KEYS so it can be claimed
-  VALID_KEYS[keyVal] = { product, plan: type, expires: type==='Lifetime'?'Never':'24 hours' };
+
+  try{
+    const res = await fetch('/api/admin/add-key', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key: keyVal, product, plan: type })
+    });
+    const data = await res.json();
+    if(!res.ok){ showMsg(msg, data.error || 'Could not add key.', '#ff6688'); return; }
+
+    keyStore.push({
+      key:keyVal, product, type,
+      claimedBy:'—',
+      date: new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
+      status:'unclaimed'
+    });
+    document.getElementById('newKeyInput').value='';
+    showMsg(msg,'✓ Key added!','var(--green)');
+    renderStockTables();
+  }catch(e){
+    showMsg(msg, 'Network error.', '#ff6688');
+  }
 }
 
 function showMsg(el, text, color){ el.textContent=text; el.style.color=color; el.style.display='block'; setTimeout(()=>el.style.display='none',3000); }
@@ -2165,17 +2189,31 @@ function switchLobbyTab(panel, btn){
 }
 
 // ── LOGIN ──
-function doLogin(){
-  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+async function doLogin(){
+  const username = document.getElementById('loginUser').value.trim();
   const pass = document.getElementById('loginPass').value;
   const err  = document.getElementById('loginError');
-  const acc  = ACCOUNTS[user];
-  if(acc && acc.password === pass){
+
+  try{
+    const res = await fetch('/api/login', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, password: pass })
+    });
+    const data = await res.json();
+    if(!res.ok){
+      err.textContent = data.error || 'Invalid username or password.';
+      err.classList.add('show');
+      return;
+    }
     err.classList.remove('show');
-    profileData.username = acc.username;
-    currentAccount = acc;
+    currentAccount = data.user;
+    profileData.username = data.user.username;
+    if(data.user.bio) profileData.bio = data.user.bio;
+    if(data.user.country) profileData.country = data.user.country;
     enterApp(false);
-  } else {
+  }catch(e){
+    err.textContent = 'Network error. Please try again.';
     err.classList.add('show');
   }
 }
@@ -2207,29 +2245,35 @@ const VALID_KEYS = {
   'TEST': { product:'Rose Executor', plan:'Lifetime', expires:'Never' },
 };
 
-function claimKey(){
+async function claimKey(){
   const input = document.getElementById('claimKeyInput');
   const msg   = document.getElementById('claimMsg');
   const key   = input.value.trim().toUpperCase();
 
   if(!key){ showClaimMsg('Please enter a key.','#ff6688'); return; }
-  if(!VALID_KEYS[key]){ showClaimMsg('Invalid or already used key.','#ff6688'); return; }
-  if(currentAccount.subscription){ showClaimMsg('You already have an active license.','#ffaa44'); return; }
 
-  const data = VALID_KEYS[key];
-  currentAccount.subscription = {
-    product: data.product,
-    plan:    data.plan,
-    key:     'ROSE-'+Math.random().toString(36).slice(2,6).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase(),
-    expires: data.expires,
-    status:  'active'
-  };
-  currentAccount._hadSub = true;
-  input.value = '';
-  showClaimMsg('✓ Key claimed! License activated.','var(--green)');
-  logKey(profileData.username, data.product, data.plan, currentAccount.subscription.key);
-  markKeyClaimed(key, profileData.username);
-  refreshLicenseAndDash();
+  try{
+    const res = await fetch('/api/claim-key', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ key })
+    });
+    const data = await res.json();
+    if(!res.ok){ showClaimMsg(data.error || 'Invalid or already used key.', '#ff6688'); return; }
+
+    currentAccount.subscription = {
+      product: data.license.product,
+      plan:    data.license.plan,
+      key:     data.license.key,
+      expires: data.license.expires_at || 'Never',
+      status:  'active'
+    };
+    input.value = '';
+    showClaimMsg('✓ Key claimed! License activated.','var(--green)');
+    refreshLicenseAndDash();
+  }catch(e){
+    showClaimMsg('Network error. Please try again.', '#ff6688');
+  }
 }
 
 function showClaimMsg(text, color){
@@ -2355,15 +2399,29 @@ function confirmHwid(){
 document.getElementById('hwidModal').addEventListener('click',function(e){if(e.target===this)closeHwidModal();});
 
 // ── REGISTER (frontend only for now) ──
-function doRegister(){
-  const user = document.getElementById('regUser').value.trim();
-  const pass = document.getElementById('regPass').value;
-  const pass2= document.getElementById('regPass2').value;
-  if(!user||!pass){alert('Please fill in all fields.');return;}
+async function doRegister(){
+  const username = document.getElementById('regUser').value.trim();
+  const email    = document.getElementById('regEmail').value.trim();
+  const pass     = document.getElementById('regPass').value;
+  const pass2    = document.getElementById('regPass2').value;
+  if(!username||!email||!pass){alert('Please fill in all fields.');return;}
   if(pass!==pass2){alert('Passwords do not match.');return;}
-  // In a real app this would hit a backend — for now just log in
-  profileData.username = user;
-  enterApp(false);
+
+  try{
+    const res = await fetch('/api/register', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ username, email, password: pass })
+    });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Registration failed.'); return; }
+
+    currentAccount = data.user;
+    profileData.username = data.user.username;
+    enterApp(false);
+  }catch(e){
+    alert('Network error. Please try again.');
+  }
 }
 
 // ── PAGES ──
