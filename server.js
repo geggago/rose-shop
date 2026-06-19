@@ -1,11 +1,18 @@
 require('dotenv').config();
+console.log('Starting Rose Shop backend...');
+console.log('SUPABASE_URL set:', !!process.env.SUPABASE_URL);
+console.log('SUPABASE_SERVICE_KEY set:', !!process.env.SUPABASE_SERVICE_KEY);
+console.log('JWT_SECRET set:', !!process.env.JWT_SECRET);
+
 const express = require('express');
+console.log('express loaded');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
+console.log('all modules loaded');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,6 +23,7 @@ const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
 );
+console.log('supabase client created');
 
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
@@ -228,4 +236,11 @@ app.get('*', (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`Rose Shop backend running on port ${PORT}`);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('UNCAUGHT EXCEPTION:', err);
+});
+process.on('unhandledRejection', (err) => {
+  console.error('UNHANDLED REJECTION:', err);
 });
