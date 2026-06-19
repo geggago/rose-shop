@@ -84,14 +84,14 @@ app.post('/api/login', async (req, res) => {
   const { data: user } = await supabase
     .from('users')
     .select('*')
-    .eq('username', username)
+    .or(`username.eq.${username},email.eq.${username}`)
     .maybeSingle();
 
-  if (!user) return res.status(401).json({ error: 'Invalid username or password' });
+  if (!user) return res.status(401).json({ error: 'Invalid username/email or password' });
   if (user.banned) return res.status(403).json({ error: 'This account has been banned' });
 
   const valid = await bcrypt.compare(password, user.password_hash);
-  if (!valid) return res.status(401).json({ error: 'Invalid username or password' });
+  if (!valid) return res.status(401).json({ error: 'Invalid username/email or password' });
 
   const token = makeToken(user);
   res.cookie('rose_token', token, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000, sameSite: 'lax' });
