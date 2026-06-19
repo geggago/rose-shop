@@ -629,7 +629,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
      LOBBY PAGE
 ══════════════════════════════════════ -->
 <div id="lobbyPage" class="page active">
-  <div class="lobby-pill"><span class="pill-dot"></span>Rose External v1.0 — Now Live</div>
+
 
   <div class="lobby-logo">
     <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
@@ -739,9 +739,9 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
         <div class="home-hero-glow-rose"></div>
         <div class="home-hero-glow-blue"></div>
         <div class="home-hero-content">
-          <div class="home-pill"><span class="pill-dot"></span> Rose External v1.0 — Now Live</div>
-          <h1 class="home-title">The External Built<br>for <span class="home-title-rose">Rose CS2</span></h1>
-          <p class="home-sub">Our own custom game built from the ground up — so you can experience it with every tool enabled. No bans, no guilt, full freedom.</p>
+
+          <h1 class="home-title">The Universal<br><span class="home-title-rose">Script Executor</span></h1>
+          <p class="home-sub">Write and run your own scripts to modify any single-player game in real time. No coding knowledge needed — full control, full freedom.</p>
           <div class="home-btns">
             <button class="btn-buy" style="border-radius:6px;padding:12px 28px;width:auto;" onclick="showTab('products', document.getElementById('tabShop'))">Browse Rose Shop →</button>
             <a href="https://discord.gg/X7xEAcTVfS" target="_blank" class="home-discord-btn">Join Discord</a>
@@ -753,7 +753,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
         <div class="home-stat"><div class="home-stat-n blue">3</div><div class="home-stat-l">Active Users</div></div>
         <div class="home-stat"><div class="home-stat-n rose">99.9%</div><div class="home-stat-l">Uptime</div></div>
         <div class="home-stat"><div class="home-stat-n blue">Free</div><div class="home-stat-l">Trial Available</div></div>
-        <div class="home-stat"><div class="home-stat-n rose">0</div><div class="home-stat-l">Detections</div></div>
+        <div class="home-stat"><div class="home-stat-n rose">100%</div><div class="home-stat-l">Safe & Undetected</div></div>
       </div>
 
       <!-- FAQ -->
@@ -833,79 +833,8 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
         <div style="margin-top:2.5rem;text-align:center;padding-top:1.5rem;border-top:1px solid var(--border);">
           <p style="font-size:.75rem;color:var(--text-muted);line-height:1.7;">
             By purchasing any product you agree to our <a href="#" onclick="document.getElementById('termsModal').style.display='flex'" style="color:var(--blue-light);text-decoration:none;font-weight:600;">Terms of Service</a>.<br>
-            All software is exclusively for Rose CS2 and must not be used on any other game or platform.
+            All software is exclusively for use on titles and applications you legally own.
           </p>
-        </div>
-      </div>
-
-      <!-- PRODUCT DETAIL VIEW (hidden by default) -->
-      <div id="productDetail" style="display:none;">
-        <button class="back-btn" onclick="showShopListing()">← Back to Products</button>
-
-        <div class="detail-layout">
-          <!-- LEFT: image + badges -->
-          <div class="detail-left">
-            <div class="detail-art">
-              <div class="detail-art-bg"></div>
-              <div class="detail-art-text">ROSE<br>EXTERNAL</div>
-              <span class="shop-badge-popular" style="top:14px;left:14px;">✦ POPULAR</span>
-              <span class="shop-badge-undetected" style="top:14px;right:14px;">● UNDETECTED</span>
-            </div>
-          </div>
-
-          <!-- RIGHT: plans -->
-          <div class="detail-right">
-            <div class="sec-label" style="text-align:left;">Rose CS2</div>
-            <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.8rem;font-weight:700;letter-spacing:-.02em;margin-bottom:.3rem;">Rose External</h2>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:1.4rem;">
-              <span style="color:#f5c518;font-size:.9rem;">★★★★★</span>
-              <span style="font-size:.8rem;color:var(--text-muted);">5.0 rating</span>
-              <span style="font-size:.8rem;color:var(--text-muted);">·</span>
-              <span class="tag-undetected" style="font-size:.65rem;padding:3px 8px;">Undetected</span>
-            </div>
-            <p style="font-size:.88rem;color:var(--text-dim);line-height:1.7;margin-bottom:2rem;">The complete external suite built exclusively for Rose CS2. Every feature, fully unlocked — no bans, no restrictions. Choose your plan below.</p>
-
-            <!-- FREE TRIAL PLAN -->
-            <div style="background:rgba(8,15,28,0.7);border:1px solid rgba(26,45,74,0.6);border-radius:8px;padding:1.3rem;margin-bottom:1rem;">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                <div>
-                  <div style="font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:700;color:#ffffff;">Free Trial</div>
-                  <div style="font-size:.75rem;color:#6b7a99;margin-top:.1rem;">24 hours full access</div>
-                </div>
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;color:#ff2255;">Free</div>
-              </div>
-              <div id="shopFreeStock" style="font-size:.78rem;font-weight:700;color:#ff6666;margin-bottom:.7rem;">📦 Stock: 0 — Out of Stock</div>
-              <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem;">
-                <div style="font-size:.82rem;color:#8899bb;">✓ Full Access</div>
-                <div style="font-size:.82rem;color:#8899bb;">✓ 24/7 Support</div>
-                <div style="font-size:.82rem;color:#8899bb;">✓ 0 Cloud Scripts</div>
-              </div>
-              <button id="trialBtn" class="btn-buy ghost" style="border-radius:6px;padding:10px;width:100%;" onclick="purchasePlan('Free Trial','0 Cloud Scripts','24 hours')">Start Free Trial</button>
-            </div>
-
-            <!-- LIFETIME PLAN -->
-            <div style="background:rgba(8,15,28,0.7);border:1px solid rgba(255,34,85,0.35);border-radius:8px;padding:1.3rem;margin-bottom:1rem;box-shadow:0 0 24px rgba(255,34,85,0.08);">
-              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem;">
-                <div>
-                  <div style="font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:700;color:#ffffff;">Lifetime</div>
-                  <div style="font-size:.75rem;color:#6b7a99;margin-top:.1rem;">One-time — own it forever</div>
-                </div>
-                <div style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;color:#ff2255;">$9.99</div>
-              </div>
-              <div id="oldLifeStock" style="font-size:.78rem;font-weight:700;color:#ff6666;margin-bottom:.7rem;">📦 Stock: 0 — Out of Stock</div>
-              <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:.9rem;">
-                <div style="font-size:.82rem;color:#8899bb;">✓ Full Access</div>
-                <div style="font-size:.82rem;color:#8899bb;">✓ 24/7 Support</div>
-                <div style="font-size:.82rem;color:#8899bb;">✓ 100 Cloud Scripts</div>
-              </div>
-              <button id="oldLifetimeBtn" class="btn-buy" style="border-radius:6px;padding:10px;width:100%;" onclick="purchasePlan('Lifetime','100 Cloud Scripts','Never')">Buy Now →</button>
-            </div>
-
-            <!-- TOS NOTICE -->
-            <div style="margin-top:1.5rem;padding:1rem 1.2rem;background:rgba(4,8,16,0.5);border:1px solid var(--border);border-radius:8px;font-size:.76rem;color:var(--text-muted);line-height:1.65;">
-              By purchasing you agree to our <a href="#" onclick="document.getElementById('termsModal').style.display='flex'" style="color:var(--blue-light);text-decoration:none;font-weight:600;">Terms of Service</a>.
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1106,7 +1035,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           <!-- Download card -->
           <div class="dash-card">
             <div class="dash-card-title">Download</div>
-            <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:1.2rem;line-height:1.6;">Rose External is ready. Run the loader before launching Rose CS2.</div>
+            <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:1.2rem;line-height:1.6;">Rose Executor is ready. Run the loader, then attach to your target process.</div>
             <button class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;">⬇ Download Loader</button>
             <div style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.6rem;">v1.0.0 · Windows 10/11 64-bit</div>
           </div>
@@ -1141,7 +1070,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
 
         <button onclick="confirmPurchase()" class="auth-submit" style="margin-top:.2rem;">Confirm Purchase</button>
 
-        <p style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:1.1rem;line-height:1.6;">By purchasing you agree to our <a href="#" onclick="document.getElementById('termsModal').style.display='flex';document.getElementById('purchaseModal').style.display='none'" style="color:var(--blue-light);text-decoration:none;">Terms of Service</a>. All sales are final per our refund policy. Rose External is for Rose CS2 only.</p>
+        <p style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:1.1rem;line-height:1.6;">By purchasing you agree to our <a href="#" onclick="document.getElementById('termsModal').style.display='flex';document.getElementById('purchaseModal').style.display='none'" style="color:var(--blue-light);text-decoration:none;">Terms of Service</a>. All sales are final per our refund policy.</p>
       </div>
     </div>
 
@@ -1152,28 +1081,28 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
 
         <div style="font-size:.68rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--rose-bright);margin-bottom:.4rem;">Legal</div>
         <h2 style="font-family:'Space Grotesk',sans-serif;font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:.3rem;">Terms of Service</h2>
-        <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:2rem;">Last updated: June 2026. By using Rose Shop or Rose External you agree to these terms in full.</p>
+        <p style="font-size:.75rem;color:var(--text-muted);margin-bottom:2rem;">Last updated: June 2026. By using Rose Shop or Rose Executor you agree to these terms in full.</p>
 
         <div style="display:flex;flex-direction:column;gap:1.6rem;font-size:.86rem;color:var(--text-dim);line-height:1.75;">
 
           <div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">1. About Rose External</div>
-            <p>Rose External is a software tool developed exclusively for Rose CS2 — a privately owned custom game created and operated by the Rose Shop team. Rose External is <strong style="color:var(--text);">not</strong> affiliated with, endorsed by, or connected to Valve Corporation, Counter-Strike 2, or any other third-party game or platform. Any use of Rose External outside of Rose CS2 is strictly prohibited and outside the scope of this agreement.</p>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">1. About Rose Executor</div>
+            <p>Rose Executor is a script execution tool developed by the Rose Shop team for use with single-player PC games and software the user legally owns. Rose Executor is <strong style="color:var(--text);">not</strong> affiliated with, endorsed by, or connected to any third-party game developer or publisher. Use of Rose Executor on any online, multiplayer, or competitive title is done entirely at the user's own risk and discretion.</p>
           </div>
 
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">2. License & Permitted Use</div>
-            <p>Upon purchase, you are granted a personal, non-exclusive, non-transferable license to use Rose External solely within Rose CS2. You may not sublicense, resell, share, or distribute your license to any third party. Licenses are bound to one machine at a time and may be transferred via the official dashboard a maximum of twice per calendar month.</p>
+            <p>Upon purchase, you are granted a personal, non-exclusive, non-transferable license to use Rose Executor. You may not sublicense, resell, share, or distribute your license to any third party. Licenses are bound to one machine at a time and may be transferred via the official dashboard a maximum of twice per calendar month.</p>
           </div>
 
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">3. Prohibited Activities</div>
             <p>The following are strictly forbidden and will result in immediate permanent termination of your account and license with no refund:</p>
             <ul style="margin-top:.6rem;margin-left:1.2rem;display:flex;flex-direction:column;gap:.3rem;">
-              <li>Reverse engineering, decompiling, or disassembling Rose External</li>
+              <li>Reverse engineering, decompiling, or disassembling Rose Executor</li>
               <li>Cracking, bypassing, or tampering with the license system</li>
               <li>Redistributing, reselling, or sharing cracked versions of the software</li>
-              <li>Using Rose External on any game other than Rose CS2</li>
+              <li>Using Rose Executor to violate the terms of service of any third-party software</li>
               <li>Attempting to harm, disrupt, or exploit Rose Shop infrastructure</li>
               <li>Chargebacks filed without first contacting support</li>
             </ul>
@@ -1187,17 +1116,17 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
 
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">5. No Warranty & Limitation of Liability</div>
-            <p>Rose External is provided <strong style="color:var(--text);">"as is"</strong> without any warranty of any kind. Rose Shop is not liable for any damages, losses, or consequences arising from the use or inability to use the software. By using Rose External you accept full responsibility for your own use of the product.</p>
+            <p>Rose Executor is provided <strong style="color:var(--text);">"as is"</strong> without any warranty of any kind. Rose Shop is not liable for any damages, losses, or consequences arising from the use or inability to use the software, including but not limited to consequences resulting from use on third-party platforms. By using Rose Executor you accept full responsibility for your own use of the product.</p>
           </div>
 
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">6. Intellectual Property</div>
-            <p>All code, assets, and content related to Rose External and Rose Shop are the intellectual property of the Rose Shop team. Unauthorized reproduction or distribution is a violation of applicable copyright law.</p>
+            <p>All code, assets, and content related to Rose Executor and Rose Shop are the intellectual property of the Rose Shop team. Unauthorized reproduction or distribution is a violation of applicable copyright law.</p>
           </div>
 
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700;color:var(--text);margin-bottom:.4rem;">7. Changes to These Terms</div>
-            <p>We reserve the right to update these Terms of Service at any time. Continued use of Rose Shop or Rose External after updates are posted constitutes your acceptance of the revised terms. It is your responsibility to review these terms periodically.</p>
+            <p>We reserve the right to update these Terms of Service at any time. Continued use of Rose Shop or Rose Executor after updates are posted constitutes your acceptance of the revised terms. It is your responsibility to review these terms periodically.</p>
           </div>
 
           <div>
@@ -1660,12 +1589,10 @@ setInterval(updateClock,1000);
 // ── SHOP ──
 function showProductDetail(product){
   document.getElementById('shopListing').style.display='none';
-  document.getElementById('productDetail').style.display = (product==='executor') ? 'none' : 'block';
-  document.getElementById('executorDetail').style.display = (product==='executor') ? 'block' : 'none';
+  document.getElementById('executorDetail').style.display='block';
   syncShopStock();
 }
 function showShopListing(){
-  document.getElementById('productDetail').style.display='none';
   document.getElementById('executorDetail').style.display='none';
   document.getElementById('shopListing').style.display='block';
 }
@@ -2277,7 +2204,7 @@ function showToast(msg){
 
 // ── VALID KEYS ──
 const VALID_KEYS = {
-  'TEST': { product:'Rose External', plan:'Lifetime', expires:'Never' },
+  'TEST': { product:'Rose Executor', plan:'Lifetime', expires:'Never' },
 };
 
 function claimKey(){
@@ -2319,7 +2246,7 @@ function purchasePlan(plan, cfg, expires){
   // store pending plan then open email modal
   pendingPlan = { plan, cfg, expires };
   document.getElementById('purchaseModal').style.display='flex';
-  document.getElementById('purchasePlanName').textContent = 'Rose External — ' + plan;
+  document.getElementById('purchasePlanName').textContent = 'Rose Executor — ' + plan;
   document.getElementById('purchaseEmail').value='';
   document.getElementById('purchaseMsg').style.display='none';
 }
