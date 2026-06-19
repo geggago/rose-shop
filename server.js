@@ -20,7 +20,7 @@ const supabase = createClient(
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname)));
 
 // ── HELPERS ──
 function makeToken(user) {
@@ -223,7 +223,7 @@ app.post('/api/admin/promote/:id', authMiddleware, requireAdmin, async (req, res
 
 // ── FALLBACK: serve index.html for the root ──
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.listen(PORT, () => {
