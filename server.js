@@ -252,6 +252,9 @@ app.post('/api/admin/ban/:id', authMiddleware, requireAdmin, async (req, res) =>
   if (target.role === 'owner' && req.user.role !== 'owner') {
     return res.status(403).json({ error: 'Cannot ban an owner' });
   }
+  if (target.role === 'admin' && req.user.role !== 'owner') {
+    return res.status(403).json({ error: 'Only an owner can ban an admin' });
+  }
   const { error } = await supabase.from('users').update({ banned: true }).eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
@@ -263,7 +266,23 @@ app.post('/api/admin/unban/:id', authMiddleware, requireAdmin, async (req, res) 
   res.json({ success: true });
 });
 
+app.post('/api/admin/timeout/:id', authMiddleware, requireAdmin, async (req, res) => {
+  const { data: target } = await supabase.from('users').select('role').eq('id', req.params.id).single();
+  if (['owner','admin'].includes(target.role) && req.user.role !== 'owner') {
+    return res.status(403).json({ error: 'Only an owner can timeout staff' });
+  }
+  const minutes = Number(req.body.minutes) || 10;
+  const timeout_until = new Date(Date.now() + minutes * 60 * 1000).toISOString();
+  const { error } = await supabase.from('users').update({ timeout_until }).eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true, timeout_until });
+});
+
+// Owner-only: promoting to admin grants real admin powers, so only an owner can grant it.
 app.post('/api/admin/promote/:id', authMiddleware, requireAdmin, async (req, res) => {
+  if (req.user.role !== 'owner') {
+    return res.status(403).json({ error: 'Only an owner can promote users to admin' });
+  }
   const { error } = await supabase.from('users').update({ role: 'admin' }).eq('id', req.params.id);
   if (error) return res.status(500).json({ error: error.message });
   res.json({ success: true });
