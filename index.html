@@ -2462,7 +2462,7 @@ function showPage(id){
 }
 function goLobby(){showPage('lobbyPage');}
 
-function enterApp(guest){
+async function enterApp(guest){
   isGuest = guest;
   showPage('appPage');
   const hasSub = !guest && currentAccount && currentAccount.subscription;
@@ -2511,7 +2511,7 @@ function enterApp(guest){
   // online count — real member count (3 accounts)
   document.getElementById('onlineCount').textContent = guest ? '2' : '3';
 
-  if(!guest && ['admin','owner'].includes(currentAccount?.role)){ renderUsers(); renderKeyLog(); loadKeyStore(); }
+  if(!guest && ['admin','owner'].includes(currentAccount?.role)){ renderUsers(); renderKeyLog(); await loadKeyStore(); }
   syncShopStock();
   showTab('home', document.getElementById('tabHome'));
   updateProfileUI();
