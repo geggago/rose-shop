@@ -1569,7 +1569,7 @@ function animWave(now){ctx.clearRect(0,0,W,H);waves.forEach(w=>drawWave(w,now));
 requestAnimationFrame(animWave);
 // Sync stock badges on load
 // Sync stock when needed via showProductDetail and enterApp
-setInterval(syncShopStock, 1000);
+setInterval(syncShopStock, 15000); // was 1000ms — now hits a real DB-backed endpoint, no need to poll every second
 
 // ── SESSION PERSISTENCE: check if already logged in ──
 async function checkSession(){
@@ -2050,17 +2050,26 @@ function toggleFreeze(){
   if(banner) banner.style.display = trialsFrozen ? 'flex' : 'none';
 }
 
-function syncShopStock(){
-  const freeKeys = keyStore.filter(k=>k.type==='Free Trial' && k.status==='unclaimed');
-  const lifeKeys = keyStore.filter(k=>k.type==='Lifetime' && k.status==='unclaimed');
+async function syncShopStock(){
+  let freeCount = 0, lifeCount = 0;
+  try{
+    const res = await fetch('/api/stock');
+    const data = await res.json();
+    if(res.ok && data.counts){
+      freeCount = data.counts['Rose Executor::Free Trial'] || 0;
+      lifeCount = data.counts['Rose Executor::Lifetime'] || 0;
+    }
+  }catch(e){
+    console.error('Failed to load public stock counts:', e);
+  }
   const fe = document.getElementById('execFreeStock');
   const le = document.getElementById('execLifeStock');
   const tb = document.getElementById('execTrialBtn');
   const lb = document.getElementById('execLifetimeBtn');
-  if(fe){ fe.textContent='📦 Stock: '+(freeKeys.length>0?freeKeys.length+' in stock':'0 — Out of Stock'); fe.style.color=freeKeys.length>0?'#44dd88':'#ff6666'; }
-  if(le){ le.textContent='📦 Stock: '+(lifeKeys.length>0?lifeKeys.length+' in stock':'0 — Out of Stock'); le.style.color=lifeKeys.length>0?'#44dd88':'#ff6666'; }
-  if(tb){ tb.disabled=freeKeys.length===0; tb.style.opacity=freeKeys.length===0?'.4':'1'; tb.style.cursor=freeKeys.length===0?'not-allowed':'pointer'; tb.textContent=freeKeys.length===0?'Out of Stock':'Start Free Trial'; }
-  if(lb){ lb.disabled=lifeKeys.length===0; lb.style.opacity=lifeKeys.length===0?'.4':'1'; lb.style.cursor=lifeKeys.length===0?'not-allowed':'pointer'; lb.textContent=lifeKeys.length===0?'Out of Stock':'Buy Now →'; }
+  if(fe){ fe.textContent='📦 Stock: '+(freeCount>0?freeCount+' in stock':'0 — Out of Stock'); fe.style.color=freeCount>0?'#44dd88':'#ff6666'; }
+  if(le){ le.textContent='📦 Stock: '+(lifeCount>0?lifeCount+' in stock':'0 — Out of Stock'); le.style.color=lifeCount>0?'#44dd88':'#ff6666'; }
+  if(tb){ tb.disabled=freeCount===0; tb.style.opacity=freeCount===0?'.4':'1'; tb.style.cursor=freeCount===0?'not-allowed':'pointer'; tb.textContent=freeCount===0?'Out of Stock':'Start Free Trial'; }
+  if(lb){ lb.disabled=lifeCount===0; lb.style.opacity=lifeCount===0?'.4':'1'; lb.style.cursor=lifeCount===0?'not-allowed':'pointer'; lb.textContent=lifeCount===0?'Out of Stock':'Buy Now →'; }
 }
 
 function renderStockTables(){
