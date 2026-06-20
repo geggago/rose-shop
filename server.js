@@ -200,6 +200,27 @@ app.post('/api/admin/suspend-key/:id', authMiddleware, requireAdmin, async (req,
   res.json({ success: true, status: newStatus });
 });
 
+app.delete('/api/admin/delete-key/:id', authMiddleware, requireAdmin, async (req, res) => {
+  const { data: current, error: findErr } = await supabase
+    .from('licenses')
+    .select('status')
+    .eq('id', req.params.id)
+    .maybeSingle();
+
+  if (findErr) return res.status(500).json({ error: findErr.message });
+  if (!current) return res.status(404).json({ error: 'Key not found' });
+
+  // Don't allow deleting a key that's already claimed by a customer —
+  // suspend it instead so their access record stays intact.
+  if (current.status === 'claimed') {
+    return res.status(400).json({ error: 'Cannot delete a claimed key. Suspend it instead.' });
+  }
+
+  const { error } = await supabase.from('licenses').delete().eq('id', req.params.id);
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ success: true });
+});
+
 // ── ADMIN: USER MANAGEMENT ──
 app.get('/api/admin/users', authMiddleware, requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('users').select('id, username, email, role, banned, created_at, timeout_until');
