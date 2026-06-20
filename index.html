@@ -2024,6 +2024,20 @@ async function suspendStockKey(key){
   }
 }
 
+async function deleteStockKey(key){
+  const k = keyStore.find(k=>k.key===key);
+  if(!k || !k._id) return;
+  if(!confirm(`Delete key ${key}? This cannot be undone.`)) return;
+  try{
+    const res = await fetch('/api/admin/delete-key/'+k._id, { method:'DELETE' });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Could not delete key.'); return; }
+    await loadKeyStore(); // re-sync from the database
+  }catch(e){
+    alert('Network error.');
+  }
+}
+
 function toggleFreeze(){
   trialsFrozen = !trialsFrozen;
   const btn = document.getElementById('freezeBtn');
@@ -2066,6 +2080,7 @@ function renderStockTables(){
     <td style="display:flex;gap:4px;flex-wrap:wrap;">
       ${k.type==='Free Trial'?`<button class="user-action-btn" style="${k.status==='frozen'?'border-color:rgba(255,34,85,0.35);color:var(--rose-soft);':''}" onclick="freezeSingleKey('${k.key}')">${k.status==='frozen'?'🔥 Unfreeze':'❄️ Freeze'}</button>`:''}
       <button class="user-action-btn ${k.status==='suspended'?'unban':''}" onclick="suspendStockKey('${k.key}')">${k.status==='suspended'?'Restore':'Suspend'}</button>
+      ${k.status!=='claimed'?`<button class="user-action-btn" style="border-color:rgba(255,34,85,0.4);color:#ff6688;" onclick="deleteStockKey('${k.key}')">🗑️ Delete</button>`:''}
     </td>
   </tr>`;
 
@@ -2511,6 +2526,7 @@ async function enterApp(guest){
   // online count — real member count (3 accounts)
   document.getElementById('onlineCount').textContent = guest ? '2' : '3';
 
+  console.log('DEBUG enterApp: guest=', guest, 'currentAccount=', currentAccount, 'role=', currentAccount?.role);
   if(!guest && ['admin','owner'].includes(currentAccount?.role)){ renderUsers(); renderKeyLog(); await loadKeyStore(); }
   syncShopStock();
   showTab('home', document.getElementById('tabHome'));
