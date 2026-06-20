@@ -958,7 +958,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           <div style="margin-top:2rem;padding:1.6rem;background:var(--panel);border:1px solid var(--border);border-radius:10px;max-width:480px;">
             <div style="font-size:.7rem;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.6rem;">Claim a License Key</div>
             <div style="display:flex;gap:.6rem;">
-              <input id="claimKeyInput" type="text" placeholder="Enter your key e.g. TEST" style="flex:1;font-family:'Inter',sans-serif;font-size:.88rem;padding:10px 14px;background:rgba(4,8,16,0.7);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--blue-light)'" onblur="this.style.borderColor='var(--border)'">
+              <input id="claimKeyInput" type="text" placeholder="Enter your key &quot;KEYAUTH-xxxxxxxxx&quot;" style="flex:1;font-family:'Inter',sans-serif;font-size:.88rem;padding:10px 14px;background:rgba(4,8,16,0.7);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;transition:border-color .2s;" onfocus="this.style.borderColor='var(--blue-light)'" onblur="this.style.borderColor='var(--border)'">
               <button onclick="claimKey()" class="btn-buy" style="width:auto;padding:10px 20px;border-radius:6px;white-space:nowrap;">Claim Key</button>
             </div>
             <div id="claimMsg" style="font-size:.78rem;margin-top:.6rem;display:none;"></div>
@@ -1305,8 +1305,6 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
         <input id="userSearch" type="text" placeholder="Search username..." class="forum-input" style="max-width:260px;" oninput="renderUsers()">
         <select id="userFilter" class="forum-input" style="max-width:180px;cursor:pointer;" onchange="renderUsers()">
           <option value="all">All Users</option>
-          <option value="active">Active Sub</option>
-          <option value="nosub">No Sub</option>
           <option value="banned">Banned</option>
         </select>
       </div>
@@ -1581,6 +1579,7 @@ async function checkSession(){
       profileData.username = data.user.username;
       if(data.user.bio) profileData.bio = data.user.bio;
       if(data.user.country) profileData.country = data.user.country;
+      await loadMyLicense();
       enterApp(false);
     }
   }catch(e){
@@ -1588,6 +1587,29 @@ async function checkSession(){
   }
 }
 checkSession();
+
+// Fetch the logged-in user's claimed license from the backend and attach it to
+// currentAccount.subscription — this is what survives a page refresh, since
+// currentAccount itself is rebuilt from scratch on every load.
+async function loadMyLicense(){
+  try{
+    const res = await fetch('/api/my-license');
+    const data = await res.json();
+    if(res.ok && data.license){
+      currentAccount.subscription = {
+        product: data.license.product,
+        plan:    data.license.plan,
+        key:     data.license.key,
+        expires: data.license.expires_at || 'Never',
+        status:  'active'
+      };
+    } else {
+      currentAccount.subscription = null;
+    }
+  }catch(e){
+    console.error('Failed to load license:', e);
+  }
+}
 function updateClock(){
   const tz=profileData.timezone;
   if(!tz){document.getElementById('profileTime').textContent='—';return;}
@@ -1973,6 +1995,7 @@ async function loadKeyStore(){
       });
     });
     renderStockTables();
+    renderKeyLog();
   }catch(e){
     console.error('Network error loading keys:', e);
   }
@@ -2110,126 +2133,152 @@ function markKeyClaimed(keyVal, username){
 }
 
 // ── KEY LOG ──
-const keyLog = [];
-
-function logKey(account, product, plan, key){
-  keyLog.push({
-    key, account, product, plan,
-    date: new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
-    suspended: false
-  });
-  renderKeyLog();
-}
-
-function suspendKey(key){
-  const entry = keyLog.find(k=>k.key===key);
-  if(entry){ entry.suspended = !entry.suspended; renderKeyLog(); }
-}
-
-function freezeLogKey(key){
-  const entry = keyLog.find(k=>k.key===key);
-  if(entry){ entry.frozen = !entry.frozen; renderKeyLog(); }
-}
+// Reads from keyStore (populated by loadKeyStore() from the real backend) —
+// this used to be a separate local-only array that nothing ever filled.
 
 function renderKeyLog(){
   const freeBody = document.getElementById('freeKeyBody');
   const lifeBody = document.getElementById('lifetimeKeyBody');
   if(!freeBody||!lifeBody) return;
 
-  const freeKeys = keyLog.filter(k=>k.plan==='Free Trial');
-  const lifeKeys = keyLog.filter(k=>k.plan==='Lifetime');
+  const freeKeys = keyStore.filter(k=>k.type==='Free Trial');
+  const lifeKeys = keyStore.filter(k=>k.type==='Lifetime');
 
   const freeRow = k=>`<tr>
     <td style="font-family:monospace;font-size:.78rem;color:var(--blue-light);">${k.key}</td>
-    <td>${k.account}</td>
+    <td>${k.claimedBy}</td>
     <td>${k.product}</td>
     <td>${k.date}</td>
-    <td><span class="lic-status ${k.suspended?'expired':k.frozen?'nosub':'active-s'}">${k.suspended?'Suspended':k.frozen?'❄️ Frozen':'Active'}</span></td>
+    <td><span class="lic-status ${k.status==='suspended'?'expired':k.status==='claimed'?'active-s':'nosub'}">${k.status==='suspended'?'Suspended':k.status==='claimed'?'● Claimed':'Unclaimed'}</span></td>
     <td style="display:flex;gap:4px;">
-      <button class="user-action-btn ${k.frozen?'unban':''}" onclick="freezeLogKey('${k.key}')">${k.frozen?'🔥 Unfreeze':'❄️ Freeze'}</button>
-      <button class="user-action-btn ${k.suspended?'unban':''}" onclick="suspendKey('${k.key}')">${k.suspended?'Restore':'Suspend'}</button>
+      <button class="user-action-btn ${k.status==='suspended'?'unban':''}" onclick="suspendStockKey('${k.key}')">${k.status==='suspended'?'Restore':'Suspend'}</button>
     </td>
   </tr>`;
 
   const lifeRow = k=>`<tr>
     <td style="font-family:monospace;font-size:.78rem;color:var(--rose-soft);">${k.key}</td>
-    <td>${k.account}</td>
+    <td>${k.claimedBy}</td>
     <td>${k.product}</td>
     <td>${k.date}</td>
-    <td><span class="lic-status ${k.suspended?'expired':'active-s'}">${k.suspended?'Suspended':'Active'}</span></td>
-    <td><button class="user-action-btn ${k.suspended?'unban':''}" onclick="suspendKey('${k.key}')">${k.suspended?'Restore':'Suspend'}</button></td>
+    <td><span class="lic-status ${k.status==='suspended'?'expired':k.status==='claimed'?'active-s':'nosub'}">${k.status==='suspended'?'Suspended':k.status==='claimed'?'● Claimed':'Unclaimed'}</span></td>
+    <td><button class="user-action-btn ${k.status==='suspended'?'unban':''}" onclick="suspendStockKey('${k.key}')">${k.status==='suspended'?'Restore':'Suspend'}</button></td>
   </tr>`;
 
   freeBody.innerHTML = freeKeys.length ? freeKeys.map(freeRow).join('') : '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:1.5rem;">No free trial keys yet.</td></tr>';
   lifeBody.innerHTML = lifeKeys.length ? lifeKeys.map(lifeRow).join('') : '<tr><td colspan="6" style="color:var(--text-muted);text-align:center;padding:1.5rem;">No lifetime keys yet.</td></tr>';
 }
 
-let pendingPromoteUser = null;
-function promptPromote(username){
-  pendingPromoteUser = username;
+let pendingPromoteUser = null; // now stores {id, username}
+function promptPromote(id, username){
+  pendingPromoteUser = { id, username };
   document.getElementById('promoteUsername').textContent = username;
   document.getElementById('promoteModal').style.display='flex';
 }
 function closePromoteModal(){ document.getElementById('promoteModal').style.display='none'; }
-function confirmPromote(){
+async function confirmPromote(){
   if(!pendingPromoteUser) return;
-  const acc = Object.values(ACCOUNTS).find(a=>a.username===pendingPromoteUser);
-  if(acc) acc.role='admin';
-  closePromoteModal();
-  renderUsers();
-  alert(`✓ ${pendingPromoteUser} has been promoted to Staff (Admin).`);
+  try{
+    const res = await fetch('/api/admin/promote/'+pendingPromoteUser.id, { method:'POST' });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Could not promote user.'); closePromoteModal(); return; }
+    closePromoteModal();
+    alert(`✓ ${pendingPromoteUser.username} has been promoted to Staff (Admin).`);
+    await loadUserStore();
+  }catch(e){
+    alert('Network error.');
+    closePromoteModal();
+  }
 }
 document.getElementById('promoteModal').addEventListener('click',function(e){if(e.target===this)closePromoteModal();});
 
 // ── USER MANAGEMENT (admin) ──
-const userActivity = {
-  'TestUser':  ['Logged in','Viewed Dashboard','Claimed key TEST','Sent message in #general'],
-  'Admin':     ['Logged in','Posted announcement','Closed ticket TKT-1234'],
-  'NovaUser':  ['Logged in','Browsed Rose Shop','Viewed Home'],
-};
-const bannedUsers = {};
-const timeoutUsers = {};
+// userStore is a render cache populated from the real backend — Supabase is the source of truth.
+let userStore = [];
+
+async function loadUserStore(){
+  try{
+    const res = await fetch('/api/admin/users');
+    const data = await res.json();
+    if(!res.ok){ console.error('Failed to load users:', data.error); return; }
+    userStore = data.users || [];
+    renderUsers();
+  }catch(e){
+    console.error('Network error loading users:', e);
+  }
+}
 
 function renderUsers(){
   const el = document.getElementById('usersTable');
   if(!el) return;
   const search = (document.getElementById('userSearch')||{}).value||'';
   const filter = (document.getElementById('userFilter')||{}).value||'all';
-  const allUsers = Object.values(ACCOUNTS).map(acc=>({
-    username: acc.username, role: acc.role||'user', sub: acc.subscription,
-    banned: bannedUsers[acc.username],
-    timedout: timeoutUsers[acc.username]&&timeoutUsers[acc.username]>Date.now(),
-    activity: (userActivity[acc.username]||[]).slice(-1)[0]||'No activity'
+  const now = Date.now();
+  const allUsers = userStore.map(u=>({
+    id: u.id,
+    username: u.username,
+    role: u.role||'user',
+    banned: u.banned,
+    timedout: u.timeout_until && new Date(u.timeout_until).getTime() > now,
   }));
   let filtered = allUsers.filter(u=>u.username.toLowerCase().includes(search.toLowerCase()));
-  if(filter==='active')  filtered=filtered.filter(u=>u.sub&&u.sub.status==='active');
-  if(filter==='nosub')   filtered=filtered.filter(u=>!u.sub);
   if(filter==='banned')  filtered=filtered.filter(u=>u.banned);
   if(!filtered.length){ el.innerHTML='<p style="color:var(--text-muted);font-size:.84rem;padding:1rem 0;">No users found.</p>'; return; }
   el.innerHTML=`<table class="users-table"><thead><tr>
-    <th>User</th><th>Role</th><th>License</th><th>Status</th><th>Last Activity</th><th>Actions</th>
-  </tr></thead><tbody>${filtered.map(u=>`<tr>
+    <th>User</th><th>Role</th><th>Status</th><th>Actions</th>
+  </tr></thead><tbody>${filtered.map(u=>{
+    const isOwner = u.role==='owner';
+    const isAdmin = u.role==='admin';
+    const iAmOwner = currentAccount?.role==='owner';
+    // owner can act on anyone but themself; admin can only act on plain users
+    const canAct = u.username!==currentAccount?.username && (iAmOwner || u.role==='user');
+    return `<tr>
     <td><strong style="color:var(--text);">${u.username}</strong></td>
-    <td><span class="user-badge ${u.role}">${u.role==='owner'?'👑 Owner':u.role==='admin'?'⚡ Admin':'User'}</span></td>
-    <td>${u.sub?`<span class="user-badge active">● ${u.sub.plan}</span>`:`<span class="user-badge nosub">No Sub</span>`}</td>
+    <td><span class="user-badge ${u.role}">${isOwner?'👑 Owner':isAdmin?'⚡ Admin':'User'}</span></td>
     <td>${u.banned?`<span class="user-badge banned">Banned</span>`:u.timedout?`<span class="user-badge nosub">Timed Out</span>`:`<span class="user-badge active">Active</span>`}</td>
-    <td style="font-size:.78rem;">${u.activity}</td>
-    <td style="display:flex;gap:4px;flex-wrap:wrap;">${(u.role==='user'||u.role==='admin'&&['admin','owner'].includes(currentAccount?.role)&&currentAccount?.role==='owner'||u.role==='user')?
-      (u.role!=='owner'?`
-      <button class="user-action-btn" onclick="viewActivity('${u.username}')">Activity</button>
-      ${u.role==='user'?`<button class="user-action-btn" style="border-color:rgba(61,142,240,0.3);color:var(--blue-light);" onclick="promptPromote('${u.username}')">Promote</button>`:''}
+    <td style="display:flex;gap:4px;flex-wrap:wrap;">${canAct ? `
+      ${u.role==='user' && iAmOwner ? `<button class="user-action-btn" style="border-color:rgba(61,142,240,0.3);color:var(--blue-light);" onclick="promptPromote('${u.id}','${u.username}')">Promote</button>` : ''}
       ${u.banned
-        ?`<button class="user-action-btn unban" onclick="unbanUser('${u.username}')">Unban</button>`
-        :`${u.role!=='admin'||currentAccount?.role==='owner'?`<button class="user-action-btn" onclick="timeoutUser('${u.username}')">Timeout</button>
-          <button class="user-action-btn" onclick="banUser('${u.username}')" style="border-color:rgba(255,80,80,0.3);color:#ff6666;">Ban</button>`:''}` }
-    `:'<span style="font-size:.75rem;color:var(--text-muted);">—</span>')
-    :'<span style="font-size:.75rem;color:var(--text-muted);">—</span>'}</td>
-  </tr>`).join('')}</tbody></table>`;
+        ? `<button class="user-action-btn unban" onclick="unbanUserById('${u.id}','${u.username}')">Unban</button>`
+        : `<button class="user-action-btn" onclick="timeoutUserById('${u.id}','${u.username}')">Timeout</button>
+           <button class="user-action-btn" onclick="banUserById('${u.id}','${u.username}')" style="border-color:rgba(255,80,80,0.3);color:#ff6666;">Ban</button>`
+      }
+    ` : '<span style="font-size:.75rem;color:var(--text-muted);">—</span>'}</td>
+  </tr>`;
+  }).join('')}</tbody></table>`;
 }
-function banUser(u){if(!confirm(`Ban ${u}?`))return;bannedUsers[u]=true;renderUsers();}
-function unbanUser(u){delete bannedUsers[u];renderUsers();}
-function timeoutUser(u){timeoutUsers[u]=Date.now()+(10*60*1000);alert(`${u} timed out for 10 minutes.`);renderUsers();}
-function viewActivity(u){alert(`Activity log for ${u}:\n\n• ${(userActivity[u]||['No activity']).join('\n• ')}`);}
+
+async function banUserById(id, username){
+  if(!confirm(`Ban ${username}?`)) return;
+  try{
+    const res = await fetch('/api/admin/ban/'+id, { method:'POST' });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Could not ban user.'); return; }
+    await loadUserStore();
+  }catch(e){ alert('Network error.'); }
+}
+
+async function unbanUserById(id, username){
+  try{
+    const res = await fetch('/api/admin/unban/'+id, { method:'POST' });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Could not unban user.'); return; }
+    await loadUserStore();
+  }catch(e){ alert('Network error.'); }
+}
+
+async function timeoutUserById(id, username){
+  try{
+    const res = await fetch('/api/admin/timeout/'+id, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ minutes: 10 })
+    });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Could not timeout user.'); return; }
+    alert(`${username} timed out for 10 minutes.`);
+    await loadUserStore();
+  }catch(e){ alert('Network error.'); }
+}
 
 function switchLobbyTab(panel, btn){
   document.querySelectorAll('.auth-tab-btn').forEach(b=>b.classList.remove('active'));
@@ -2261,6 +2310,7 @@ async function doLogin(){
     profileData.username = data.user.username;
     if(data.user.bio) profileData.bio = data.user.bio;
     if(data.user.country) profileData.country = data.user.country;
+    await loadMyLicense();
     enterApp(false);
   }catch(e){
     err.textContent = 'Network error. Please try again.';
@@ -2311,13 +2361,7 @@ async function claimKey(){
     const data = await res.json();
     if(!res.ok){ showClaimMsg(data.error || 'Invalid or already used key.', '#ff6688'); return; }
 
-    currentAccount.subscription = {
-      product: data.license.product,
-      plan:    data.license.plan,
-      key:     data.license.key,
-      expires: data.license.expires_at || 'Never',
-      status:  'active'
-    };
+    await loadMyLicense();
     input.value = '';
     showClaimMsg('✓ Key claimed! License activated.','var(--green)');
     refreshLicenseAndDash();
@@ -2536,9 +2580,8 @@ async function enterApp(guest){
   document.getElementById('onlineCount').textContent = guest ? '2' : '3';
 
   if(!guest && ['admin','owner'].includes(currentAccount?.role)){
-    try{ renderUsers(); }catch(e){ console.error('renderUsers failed (Users tab uses old fake data, not yet rewired):', e); }
-    try{ renderKeyLog(); }catch(e){ console.error('renderKeyLog failed:', e); }
-    await loadKeyStore();
+    try{ await loadUserStore(); }catch(e){ console.error('loadUserStore failed:', e); }
+    await loadKeyStore(); // also renders Key Log once data is ready
   }
   syncShopStock();
   showTab('home', document.getElementById('tabHome'));
