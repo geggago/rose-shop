@@ -186,6 +186,25 @@ app.post('/api/admin/add-key', authMiddleware, requireAdmin, async (req, res) =>
   res.json({ success: true, license: data });
 });
 
+// Public stock counts only — no auth required, no key values or user data exposed.
+// This is what the shop page (visible to guests/customers) should use, NOT /api/admin/keys.
+app.get('/api/stock', async (req, res) => {
+  const { data, error } = await supabase
+    .from('licenses')
+    .select('product, plan, status')
+    .eq('status', 'unclaimed');
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  const counts = {};
+  for (const row of data) {
+    const k = `${row.product}::${row.plan}`;
+    counts[k] = (counts[k] || 0) + 1;
+  }
+
+  res.json({ counts }); // e.g. { "Rose Executor::Free Trial": 3, "Rose Executor::Lifetime": 2 }
+});
+
 app.get('/api/admin/keys', authMiddleware, requireAdmin, async (req, res) => {
   const { data, error } = await supabase.from('licenses').select('*, users(username)').order('created_at', { ascending: false });
   if (error) return res.status(500).json({ error: error.message });
