@@ -2526,8 +2526,11 @@ async function enterApp(guest){
   // online count — real member count (3 accounts)
   document.getElementById('onlineCount').textContent = guest ? '2' : '3';
 
-  console.log('DEBUG enterApp: guest=', guest, 'currentAccount=', currentAccount, 'role=', currentAccount?.role);
-  if(!guest && ['admin','owner'].includes(currentAccount?.role)){ renderUsers(); renderKeyLog(); await loadKeyStore(); }
+  if(!guest && ['admin','owner'].includes(currentAccount?.role)){
+    try{ renderUsers(); }catch(e){ console.error('renderUsers failed (Users tab uses old fake data, not yet rewired):', e); }
+    try{ renderKeyLog(); }catch(e){ console.error('renderKeyLog failed:', e); }
+    await loadKeyStore();
+  }
   syncShopStock();
   showTab('home', document.getElementById('tabHome'));
   updateProfileUI();
