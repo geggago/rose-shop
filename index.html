@@ -1952,6 +1952,32 @@ function updateForumAccess(){
 const keyStore = []; // { key, product, type, claimedBy, date, status:'unclaimed'|'claimed'|'suspended', frozen:false }
 let trialsFrozen = false;
 
+// Fetch the real license list from the backend and replace the local keyStore with it.
+// keyStore is just a render cache for the UI — Supabase is the source of truth.
+async function loadKeyStore(){
+  try{
+    const res = await fetch('/api/admin/keys');
+    const data = await res.json();
+    if(!res.ok){ console.error('Failed to load keys:', data.error); return; }
+
+    keyStore.length = 0; // clear in place so any other references stay valid
+    (data.keys || []).forEach(lic => {
+      keyStore.push({
+        key: lic.key,
+        product: lic.product,
+        type: lic.plan,
+        claimedBy: lic.users?.username || '—',
+        date: new Date(lic.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
+        status: lic.status,
+        _id: lic.id // needed so suspend/freeze can call the real backend route
+      });
+    });
+    renderStockTables();
+  }catch(e){
+    console.error('Network error loading keys:', e);
+  }
+}
+
 async function addKey(){
   const keyVal = document.getElementById('newKeyInput').value.trim().toUpperCase();
   const product = document.getElementById('newKeyProduct').value;
@@ -1968,15 +1994,9 @@ async function addKey(){
     const data = await res.json();
     if(!res.ok){ showMsg(msg, data.error || 'Could not add key.', '#ff6688'); return; }
 
-    keyStore.push({
-      key:keyVal, product, type,
-      claimedBy:'—',
-      date: new Date().toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}),
-      status:'unclaimed'
-    });
     document.getElementById('newKeyInput').value='';
     showMsg(msg,'✓ Key added!','var(--green)');
-    renderStockTables();
+    await loadKeyStore(); // re-sync from the database instead of faking a local entry
   }catch(e){
     showMsg(msg, 'Network error.', '#ff6688');
   }
@@ -1991,11 +2011,17 @@ function freezeSingleKey(key){
   renderStockTables();
 }
 
-function suspendStockKey(key){
+async function suspendStockKey(key){
   const k = keyStore.find(k=>k.key===key);
-  if(!k) return;
-  k.status = k.status==='suspended' ? (k.claimedBy==='—'?'unclaimed':'claimed') : 'suspended';
-  renderStockTables();
+  if(!k || !k._id) return;
+  try{
+    const res = await fetch('/api/admin/suspend-key/'+k._id, { method:'POST' });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Could not update key.'); return; }
+    await loadKeyStore(); // re-sync from the database
+  }catch(e){
+    alert('Network error.');
+  }
 }
 
 function toggleFreeze(){
@@ -2485,7 +2511,7 @@ function enterApp(guest){
   // online count — real member count (3 accounts)
   document.getElementById('onlineCount').textContent = guest ? '2' : '3';
 
-  if(!guest && ['admin','owner'].includes(currentAccount?.role)){ renderUsers(); renderKeyLog(); renderStockTables(); }
+  if(!guest && ['admin','owner'].includes(currentAccount?.role)){ renderUsers(); renderKeyLog(); loadKeyStore(); }
   syncShopStock();
   showTab('home', document.getElementById('tabHome'));
   updateProfileUI();
