@@ -12,6 +12,8 @@
     "jsonwebtoken": "^9.0.2",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "stripe": "^14.0.0",
+    "resend": "^3.0.0"
   }
 }
