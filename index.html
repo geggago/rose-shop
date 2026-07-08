@@ -1628,6 +1628,8 @@ function showProductDetail(product){
   document.getElementById('shopListing').style.display='none';
   document.getElementById('executorDetail').style.display='block';
   syncShopStock();
+  carouselIndex=0;
+  setTimeout(()=>carouselGoto(0),50);
 }
 function showShopListing(){
   document.getElementById('executorDetail').style.display='none';
@@ -2710,8 +2712,7 @@ function carouselNext(e){ e.stopPropagation(); carouselGoto(carouselIndex+1); }
 function carouselPrev(e){ e.stopPropagation(); carouselGoto(carouselIndex-1); }
 
 // Reset carousel to first image whenever the product detail opens
-const _origShowDetail = showProductDetail;
-function showProductDetail(p){ carouselIndex=0; _origShowDetail(p); setTimeout(()=>carouselGoto(0),50); }
+// (handled directly inside showProductDetail now)
 </script>
 </body>
 </html>
