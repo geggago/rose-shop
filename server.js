@@ -411,7 +411,7 @@ app.post('/api/stripe/webhook', async (req, res) => {
 
       // Send confirmation email
       await resend.emails.send({
-        from: 'Rose Shop <Rose-Shop@rose-software.store>',
+        from: 'Rose Shop <onboarding@resend.dev>',
         to: customerEmail,
         subject: '✅ Your Rose Executor License Key',
         html: `
