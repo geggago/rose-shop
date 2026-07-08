@@ -814,9 +814,8 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
         </div>
         <div class="shop-listing" style="margin-top:.8rem;" onclick="showProductDetail('executor')">
           <div class="shop-listing-img">
-            <div class="shop-listing-art">
-              <div class="shop-art-bg" style="background:radial-gradient(ellipse at 60% 50%,rgba(61,142,240,0.3) 0%,rgba(212,32,80,0.1) 50%,transparent 75%);"></div>
-              <div class="shop-art-text">ROSE<br>EXECUTOR</div>
+            <div class="shop-listing-art" style="background:#040810;">
+              <img src="https://raw.githubusercontent.com/geggago/rose-shop/main/images/1.png" alt="Rose Executor" style="width:100%;height:100%;object-fit:cover;opacity:.92;">
             </div>
             <span class="shop-badge-popular" style="background:rgba(61,142,240,0.85);">✦ NEW</span>
             <span class="shop-badge-undetected">● UNDETECTED</span>
@@ -843,9 +842,15 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
         <button class="back-btn" onclick="showShopListing()">← Back to Products</button>
         <div class="detail-layout">
           <div class="detail-left">
-            <div class="detail-art" style="background:linear-gradient(135deg,#06121f,#0a1a30);">
-              <div class="detail-art-bg" style="background:radial-gradient(ellipse at 60% 50%,rgba(61,142,240,0.3) 0%,rgba(212,32,80,0.15) 60%,transparent 80%);"></div>
-              <div class="detail-art-text">ROSE<br>EXECUTOR</div>
+            <div class="detail-art" style="background:#040810;overflow:hidden;position:relative;">
+              <!-- Carousel -->
+              <img id="carouselImg" src="https://raw.githubusercontent.com/geggago/rose-shop/main/images/1.png" alt="Rose Executor Screenshot" style="width:100%;height:100%;object-fit:cover;opacity:.92;transition:opacity .2s;">
+              <!-- Arrows -->
+              <button onclick="carouselPrev(event)" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">‹</button>
+              <button onclick="carouselNext(event)" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">›</button>
+              <!-- Counter -->
+              <div id="carouselCounter" style="position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,0.6);color:#fff;font-size:.72rem;font-weight:600;padding:3px 8px;border-radius:20px;">1 / 5</div>
+              <!-- Badges -->
               <span class="shop-badge-popular" style="top:14px;left:14px;background:rgba(61,142,240,0.85);">✦ NEW</span>
               <span class="shop-badge-undetected" style="top:14px;right:14px;">● UNDETECTED</span>
             </div>
@@ -1036,7 +1041,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           <div class="dash-card">
             <div class="dash-card-title">Download</div>
             <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:1.2rem;line-height:1.6;">Rose Executor is ready. Run the loader, then attach to your target process.</div>
-            <a href="https://uploadnow.io/f/2Nbs0lr" target="_blank" class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;display:inline-block;text-decoration:none;text-align:center;box-sizing:border-box;">⬇ Download Loader</a>
+            <a href="https://uploadnow.io/s/f8dc9932-f36b-4b52-bf76-0270891e2d05" target="_blank" class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;display:inline-block;text-decoration:none;text-align:center;box-sizing:border-box;">⬇ Download Loader</a>
             <div style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.6rem;">v1.0.0 · Windows 10/11 64-bit</div>
           </div>
 
@@ -2685,6 +2690,30 @@ function updateProfileUI(){
 // enter with Enter key on login
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('loginUser').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ── SCREENSHOT CAROUSEL ──
+const CAROUSEL_IMGS = [
+  'https://raw.githubusercontent.com/geggago/rose-shop/main/images/1.png',
+  'https://raw.githubusercontent.com/geggago/rose-shop/main/images/2.png',
+  'https://raw.githubusercontent.com/geggago/rose-shop/main/images/3.png',
+  'https://raw.githubusercontent.com/geggago/rose-shop/main/images/4.png',
+  'https://raw.githubusercontent.com/geggago/rose-shop/main/images/5.png',
+];
+let carouselIndex = 0;
+
+function carouselGoto(i){
+  carouselIndex = (i + CAROUSEL_IMGS.length) % CAROUSEL_IMGS.length;
+  const img = document.getElementById('carouselImg');
+  const counter = document.getElementById('carouselCounter');
+  if(img){ img.style.opacity='0'; setTimeout(()=>{ img.src=CAROUSEL_IMGS[carouselIndex]; img.style.opacity='.92'; },150); }
+  if(counter) counter.textContent=(carouselIndex+1)+' / '+CAROUSEL_IMGS.length;
+}
+function carouselNext(e){ e.stopPropagation(); carouselGoto(carouselIndex+1); }
+function carouselPrev(e){ e.stopPropagation(); carouselGoto(carouselIndex-1); }
+
+// Reset carousel to first image whenever the product detail opens
+const _origShowDetail = showProductDetail;
+function showProductDetail(p){ carouselIndex=0; _origShowDetail(p); setTimeout(()=>carouselGoto(0),50); }
 </script>
 </body>
 </html>
