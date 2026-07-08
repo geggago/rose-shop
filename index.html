@@ -2385,17 +2385,15 @@ function showClaimMsg(text, color){
 
 async function purchasePlan(plan, cfg, expires){
   if(isGuest){ openAuth('login'); return; }
-  if(currentAccount.subscription){ alert('Du har redan en aktiv licens!'); return; }
+  if(currentAccount.subscription){ alert('You already have an active license!'); return; }
 
   if(plan === 'Free Trial'){
-    // Free trial uses the key claim system — just scroll to licenses tab
     showTab('licenses', document.getElementById('tabLicenses'));
     return;
   }
 
-  // Lifetime — redirect to Stripe checkout
   const btn = document.getElementById('execLifetimeBtn');
-  if(btn){ btn.textContent='Laddar...'; btn.disabled=true; }
+  if(btn){ btn.textContent='Loading...'; btn.disabled=true; }
 
   try{
     const res = await fetch('/api/stripe/create-checkout', {
@@ -2404,10 +2402,10 @@ async function purchasePlan(plan, cfg, expires){
       body: JSON.stringify({ plan })
     });
     const data = await res.json();
-    if(!res.ok){ alert(data.error || 'Något gick fel.'); if(btn){ btn.textContent='Buy Now →'; btn.disabled=false; } return; }
-    window.location.href = data.url; // redirect to Stripe hosted checkout
+    if(!res.ok){ alert(data.error || 'Something went wrong.'); if(btn){ btn.textContent='Buy Now →'; btn.disabled=false; } return; }
+    window.location.href = data.url;
   }catch(e){
-    alert('Nätverksfel. Försök igen.');
+    alert('Network error. Please try again.');
     if(btn){ btn.textContent='Buy Now →'; btn.disabled=false; }
   }
 }
@@ -2718,11 +2716,11 @@ document.getElementById('loginUser').addEventListener('keydown',e=>{if(e.key==='
   window.history.replaceState({}, '', '/');
   if(payment === 'success'){
     setTimeout(()=>{
-      showToast('✅ Betalning lyckades! Din licensnyckel och faktura har skickats till din e-postadress. Gå till Licenses-fliken och ange nyckeln för att aktivera.');
+      showToast('✅ Payment successful! Your license key and invoice have been sent to your email. Go to the Licenses tab and enter your key to activate.');
     }, 1000);
   } else if(payment === 'cancelled'){
     setTimeout(()=>{
-      showToast('❌ Betalningen avbröts. Inga pengar har dragits. Försök igen när du är redo.');
+      showToast('❌ Payment cancelled. No charges were made. Try again whenever you are ready.');
     }, 500);
   }
 })();
