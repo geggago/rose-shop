@@ -2383,15 +2383,33 @@ function showClaimMsg(text, color){
   setTimeout(()=>msg.style.display='none', 4000);
 }
 
-function purchasePlan(plan, cfg, expires){
+async function purchasePlan(plan, cfg, expires){
   if(isGuest){ openAuth('login'); return; }
-  if(currentAccount.subscription){ alert('You already have an active license!'); return; }
-  // store pending plan then open email modal
-  pendingPlan = { plan, cfg, expires };
-  document.getElementById('purchaseModal').style.display='flex';
-  document.getElementById('purchasePlanName').textContent = 'Rose Executor — ' + plan;
-  document.getElementById('purchaseEmail').value='';
-  document.getElementById('purchaseMsg').style.display='none';
+  if(currentAccount.subscription){ alert('Du har redan en aktiv licens!'); return; }
+
+  if(plan === 'Free Trial'){
+    // Free trial uses the key claim system — just scroll to licenses tab
+    showTab('licenses', document.getElementById('tabLicenses'));
+    return;
+  }
+
+  // Lifetime — redirect to Stripe checkout
+  const btn = document.getElementById('execLifetimeBtn');
+  if(btn){ btn.textContent='Laddar...'; btn.disabled=true; }
+
+  try{
+    const res = await fetch('/api/stripe/create-checkout', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ plan })
+    });
+    const data = await res.json();
+    if(!res.ok){ alert(data.error || 'Något gick fel.'); if(btn){ btn.textContent='Buy Now →'; btn.disabled=false; } return; }
+    window.location.href = data.url; // redirect to Stripe hosted checkout
+  }catch(e){
+    alert('Nätverksfel. Försök igen.');
+    if(btn){ btn.textContent='Buy Now →'; btn.disabled=false; }
+  }
 }
 
 let pendingPlan = null;
@@ -2690,6 +2708,24 @@ function updateProfileUI(){
 // enter with Enter key on login
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 document.getElementById('loginUser').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// Handle Stripe redirect back to site
+(function handlePaymentRedirect(){
+  const params = new URLSearchParams(window.location.search);
+  const payment = params.get('payment');
+  if(!payment) return;
+  // Clean URL without reloading
+  window.history.replaceState({}, '', '/');
+  if(payment === 'success'){
+    setTimeout(()=>{
+      showToast('✅ Betalning lyckades! Din licensnyckel och faktura har skickats till din e-postadress. Gå till Licenses-fliken och ange nyckeln för att aktivera.');
+    }, 1000);
+  } else if(payment === 'cancelled'){
+    setTimeout(()=>{
+      showToast('❌ Betalningen avbröts. Inga pengar har dragits. Försök igen när du är redo.');
+    }, 500);
+  }
+})();
 
 // ── SCREENSHOT CAROUSEL ──
 const CAROUSEL_IMGS = [
