@@ -298,6 +298,23 @@ app.post('/api/admin/promote/:id', authMiddleware, requireAdmin, async (req, res
   res.json({ success: true });
 });
 
+// Online presence tracking — simple in-memory ping store
+const onlinePings = new Map(); // userId -> lastPingTime
+
+app.post('/api/ping', authMiddleware, (req, res) => {
+  onlinePings.set(req.user.id, Date.now());
+  res.json({ ok: true });
+});
+
+app.get('/api/online-count', (req, res) => {
+  const cutoff = Date.now() - 60000; // active in last 60 seconds
+  let count = 0;
+  for (const [, time] of onlinePings) {
+    if (time > cutoff) count++;
+  }
+  res.json({ count: Math.max(count, 1) }); // always show at least 1 if server is up
+});
+
 // Public user count — total registered accounts
 app.get('/api/user-count', async (req, res) => {
   const { count, error } = await supabase
