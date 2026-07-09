@@ -298,7 +298,75 @@ app.post('/api/admin/promote/:id', authMiddleware, requireAdmin, async (req, res
   res.json({ success: true });
 });
 
-// ── STRIPE: CREATE CHECKOUT SESSION ──
+// ── FREE TRIAL: Claim via email (one per account) ──
+app.post('/api/claim-free-trial', authMiddleware, async (req, res) => {
+  const { email, emailConfirm } = req.body;
+
+  if (!email || !emailConfirm) return res.status(400).json({ error: 'Both email fields are required.' });
+  if (email.toLowerCase() !== emailConfirm.toLowerCase()) return res.status(400).json({ error: 'Emails do not match.' });
+
+  // Check if this account already claimed a free trial
+  const { data: existingTrial } = await supabase
+    .from('licenses')
+    .select('id')
+    .eq('user_id', req.user.id)
+    .eq('plan', 'Free Trial')
+    .maybeSingle();
+
+  if (existingTrial) return res.status(400).json({ error: 'Your account has already used a free trial.' });
+
+  // Check stock
+  const { data: license } = await supabase
+    .from('licenses')
+    .select('*')
+    .eq('plan', 'Free Trial')
+    .eq('status', 'unclaimed')
+    .limit(1)
+    .maybeSingle();
+
+  if (!license) return res.status(400).json({ error: 'No free trial keys available right now. Check back later.' });
+
+  // Claim the key (24h expiry)
+  const expires_at = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+  const { error } = await supabase
+    .from('licenses')
+    .update({ status: 'claimed', user_id: req.user.id, claimed_at: new Date().toISOString(), expires_at })
+    .eq('id', license.id);
+
+  if (error) return res.status(500).json({ error: error.message });
+
+  // Send email
+  await resend.emails.send({
+    from: 'Rose Shop <onboarding@resend.dev>',
+    to: email,
+    subject: '🌹 Your Rose Executor Free Trial Key',
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#080f1c;color:#e8f0ff;padding:32px;border-radius:12px;border:1px solid #1a2d4a;">
+        <h1 style="color:#ff2255;font-size:1.4rem;margin-bottom:8px;">Rose Shop</h1>
+        <h2 style="font-size:1.1rem;margin-bottom:24px;color:#e8f0ff;">Your Free Trial is ready!</h2>
+        <p style="color:#6a8aaa;margin-bottom:24px;">Here is your 24-hour free trial key for <strong style="color:#e8f0ff;">Rose Executor</strong>:</p>
+        <div style="background:#040810;border:1px solid #2a4a7a;border-radius:8px;padding:16px;text-align:center;margin-bottom:24px;">
+          <div style="font-size:0.7rem;color:#6a8aaa;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;">License Key</div>
+          <div style="font-family:monospace;font-size:1.1rem;color:#3d8ef0;letter-spacing:0.05em;">${license.key}</div>
+        </div>
+        <p style="color:#6a8aaa;margin-bottom:8px;font-size:0.85rem;">To activate:</p>
+        <ol style="color:#6a8aaa;font-size:0.85rem;padding-left:20px;line-height:1.8;">
+          <li>Go to <a href="${SITE_URL}" style="color:#3d8ef0;">${SITE_URL}</a> and log in</li>
+          <li>Click the <strong style="color:#e8f0ff;">Licenses</strong> tab</li>
+          <li>Enter your key and click <strong style="color:#e8f0ff;">Claim Key</strong></li>
+        </ol>
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid #1a2d4a;font-size:0.75rem;color:#334455;">
+          <p>This key expires in 24 hours. One free trial per account.</p>
+          <p>By using Rose Executor you agree to our <a href="${SITE_URL}" style="color:#3d8ef0;">Terms of Service</a>.</p>
+        </div>
+      </div>
+    `,
+  });
+
+  res.json({ success: true });
+});
+
+
 app.post('/api/stripe/create-checkout', authMiddleware, async (req, res) => {
   const { plan } = req.body; // 'Free Trial' or 'Lifetime'
 
