@@ -711,15 +711,15 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
     </div>
 
     <div class="app-tabs">
-      <button class="app-tab active" id="tabHome" onclick="showTab('home',this)"><span class="tab-icon">⌂</span> Home</button>
-      <button class="app-tab" id="tabShop" onclick="showTab('products',this)"><span class="tab-icon">🛒</span> Rose Shop</button>
-      <button class="app-tab" id="tabDashboard" onclick="showTab('dashboard',this)" style="display:none;"><span class="tab-icon">⚡</span> Dashboard</button>
-      <button class="app-tab" id="tabLicenses" onclick="showTab('licenses',this)"><span class="tab-icon">🔑</span> Licenses</button>
-      <button class="app-tab" onclick="showTab('forum',this)"><span class="tab-icon">📢</span> Community</button>
-      <button class="app-tab" id="tabProfile" onclick="showTab('profile',this)"><span class="tab-icon">👤</span> Profile</button>
-      <button class="app-tab" id="tabUsers" onclick="showTab('users',this)" style="display:none;"><span class="tab-icon">👑</span> Users</button>
-      <button class="app-tab" id="tabStock" onclick="showTab('stock',this)" style="display:none;"><span class="tab-icon">📦</span> Stock</button>
-      <button class="app-tab" id="tabKeylog" onclick="showTab('keylog',this)" style="display:none;"><span class="tab-icon">🗝️</span> Key Log</button>
+      <button class="app-tab active" id="tabHome" onclick="showTab('home',this,true)"><span class="tab-icon">⌂</span> Home</button>
+      <button class="app-tab" id="tabShop" onclick="showTab('products',this,true)"><span class="tab-icon">🛒</span> Rose Shop</button>
+      <button class="app-tab" id="tabDashboard" onclick="showTab('dashboard',this,true)" style="display:none;"><span class="tab-icon">⚡</span> Dashboard</button>
+      <button class="app-tab" id="tabLicenses" onclick="showTab('licenses',this,true)"><span class="tab-icon">🔑</span> Licenses</button>
+      <button class="app-tab" onclick="showTab('forum',this,true)"><span class="tab-icon">📢</span> Community</button>
+      <button class="app-tab" id="tabProfile" onclick="showTab('profile',this,true)"><span class="tab-icon">👤</span> Profile</button>
+      <button class="app-tab" id="tabUsers" onclick="showTab('users',this,true)" style="display:none;"><span class="tab-icon">👑</span> Users</button>
+      <button class="app-tab" id="tabStock" onclick="showTab('stock',this,true)" style="display:none;"><span class="tab-icon">📦</span> Stock</button>
+      <button class="app-tab" id="tabKeylog" onclick="showTab('keylog',this,true)" style="display:none;"><span class="tab-icon">🗝️</span> Key Log</button>
     </div>
 
     <div class="app-nav-right">
@@ -750,7 +750,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
       </div>
 
         <div class="home-stats">
-        <div class="home-stat"><div class="home-stat-n blue">3</div><div class="home-stat-l">Active Users</div></div>
+        <div class="home-stat"><div class="home-stat-n blue" id="activeUsersCount">—</div><div class="home-stat-l">Active Users</div></div>
         <div class="home-stat"><div class="home-stat-n rose">99.9%</div><div class="home-stat-l">Uptime</div></div>
         <div class="home-stat"><div class="home-stat-n blue">Free</div><div class="home-stat-l">Trial Available</div></div>
         <div class="home-stat"><div class="home-stat-n rose">100%</div><div class="home-stat-l">Safe & Undetected</div></div>
@@ -1039,7 +1039,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           <div class="dash-card">
             <div class="dash-card-title">Download</div>
             <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:1.2rem;line-height:1.6;">Rose Executor is ready. Run the loader, then attach to your target process.</div>
-            <a href="https://uploadnow.io/files/ykR6kbZ" target="_blank" class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;display:inline-block;text-decoration:none;text-align:center;box-sizing:border-box;">⬇ Download Loader</a>
+            <a href="https://uploadnow.io/f/2Nbs0lr" target="_blank" class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;display:inline-block;text-decoration:none;text-align:center;box-sizing:border-box;">⬇ Download Loader</a>
             <div style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.6rem;">v1.0.0 · Windows 10/11 64-bit</div>
           </div>
 
@@ -2616,15 +2616,23 @@ async function enterApp(guest){
   navAv.textContent = guest ? 'G' : profileData.username[0].toUpperCase();
   if(document.getElementById('navStatusDot')) document.getElementById('navStatusDot').className = 'nav-status-dot '+((!guest&&profileData.activity)?'online':'hidden');
 
-  // online count — real member count (3 accounts)
-  document.getElementById('onlineCount').textContent = guest ? '2' : '3';
+  // online count — fetch real total from backend
+  fetch('/api/user-count').then(r=>r.json()).then(data=>{
+    const count = data.count || 0;
+    document.getElementById('onlineCount').textContent = count;
+    document.getElementById('activeUsersCount').textContent = count;
+  }).catch(()=>{});
 
   if(!guest && ['admin','owner'].includes(currentAccount?.role)){
     try{ await loadUserStore(); }catch(e){ console.error('loadUserStore failed:', e); }
     await loadKeyStore(); // also renders Key Log once data is ready
   }
   syncShopStock();
-  showTab('home', document.getElementById('tabHome'));
+  // Only go to Home if no tab has been manually selected yet (first load)
+  // This prevents the auto-redirect bug after session restore
+  if(!window._tabManuallySelected){
+    showTab('home', document.getElementById('tabHome'));
+  }
   updateProfileUI();
   updateForumAccess();
 }
@@ -2632,8 +2640,10 @@ async function enterApp(guest){
 // ── TABS ──
 const TAB_ORDER = ['home','products','dashboard','licenses','forum','profile','users','stock','keylog'];
 let currentTabIndex = 0;
+window._tabManuallySelected = false;
 
-function showTab(name, btn){
+function showTab(name, btn, isManual=false){
+  if(isManual) window._tabManuallySelected = true;
   const newIndex = TAB_ORDER.indexOf(name);
   const direction = newIndex >= currentTabIndex ? 'right' : 'left';
   currentTabIndex = newIndex;
@@ -2721,6 +2731,29 @@ function updateProfileUI(){
   if(document.getElementById('navStatusDot')) document.getElementById('navStatusDot').className='nav-status-dot '+((!isGuest&&profileData.activity)?'online':'hidden');
   updateClock();
 }
+
+// Mouse button 4 (back) and 5 (forward) tab navigation
+document.addEventListener('mouseup', function(e){
+  const visibleTabs = TAB_ORDER.filter(name => {
+    const panel = document.getElementById('tab-' + name);
+    return panel && panel.style.display !== 'none' || document.getElementById('tab-' + name)?.classList.contains('active');
+  });
+  // Get only tabs that are visible in the nav
+  const navTabs = Array.from(document.querySelectorAll('.app-tab')).filter(t=>t.style.display!=='none');
+  const navNames = navTabs.map(t => {
+    const onclick = t.getAttribute('onclick');
+    const match = onclick && onclick.match(/showTab\('([^']+)'/);
+    return match ? match[1] : null;
+  }).filter(Boolean);
+
+  if(e.button === 3){ // back
+    const prev = navNames[navNames.indexOf(TAB_ORDER[currentTabIndex]) - 1];
+    if(prev) showTab(prev, document.getElementById('tab'+prev.charAt(0).toUpperCase()+prev.slice(1)), true);
+  } else if(e.button === 4){ // forward
+    const next = navNames[navNames.indexOf(TAB_ORDER[currentTabIndex]) + 1];
+    if(next) showTab(next, document.getElementById('tab'+next.charAt(0).toUpperCase()+next.slice(1)), true);
+  }
+});
 
 // enter with Enter key on login
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
