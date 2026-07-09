@@ -298,6 +298,15 @@ app.post('/api/admin/promote/:id', authMiddleware, requireAdmin, async (req, res
   res.json({ success: true });
 });
 
+// Public user count — total registered accounts
+app.get('/api/user-count', async (req, res) => {
+  const { count, error } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true });
+  if (error) return res.status(500).json({ error: error.message });
+  res.json({ count });
+});
+
 // ── FREE TRIAL: Claim via email (one per account) ──
 app.post('/api/claim-free-trial', authMiddleware, async (req, res) => {
   const { email, emailConfirm } = req.body;
