@@ -750,7 +750,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
       </div>
 
         <div class="home-stats">
-        <div class="home-stat"><div class="home-stat-n blue" id="activeUsersCount">—</div><div class="home-stat-l">Active Users</div></div>
+        <div class="home-stat"><div class="home-stat-n blue" id="activeUsersCount">—</div><div class="home-stat-l">Total Users</div></div>
         <div class="home-stat"><div class="home-stat-n rose">99.9%</div><div class="home-stat-l">Uptime</div></div>
         <div class="home-stat"><div class="home-stat-n blue">Free</div><div class="home-stat-l">Trial Available</div></div>
         <div class="home-stat"><div class="home-stat-n rose">100%</div><div class="home-stat-l">Safe & Undetected</div></div>
@@ -1039,7 +1039,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           <div class="dash-card">
             <div class="dash-card-title">Download</div>
             <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:1.2rem;line-height:1.6;">Rose Executor is ready. Run the loader, then attach to your target process.</div>
-            <a href="https://uploadnow.io/f/2Nbs0lr" target="_blank" class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;display:inline-block;text-decoration:none;text-align:center;box-sizing:border-box;">⬇ Download Loader</a>
+            <a href="https://uploadnow.io/files/ykR6kbZ" target="_blank" class="btn-buy" style="width:100%;border-radius:6px;padding:11px;font-size:.85rem;display:inline-block;text-decoration:none;text-align:center;box-sizing:border-box;">⬇ Download Loader</a>
             <div style="font-size:.72rem;color:var(--text-muted);text-align:center;margin-top:.6rem;">v1.0.0 · Windows 10/11 64-bit</div>
           </div>
 
@@ -2629,12 +2629,13 @@ async function enterApp(guest){
   }
   syncShopStock();
   // Only go to Home if no tab has been manually selected yet (first load)
-  // This prevents the auto-redirect bug after session restore
   if(!window._tabManuallySelected){
     showTab('home', document.getElementById('tabHome'));
   }
   updateProfileUI();
   updateForumAccess();
+  // Start pinging to register presence
+  if(!guest) pingOnline();
 }
 
 // ── TABS ──
@@ -2734,26 +2735,33 @@ function updateProfileUI(){
 
 // Mouse button 4 (back) and 5 (forward) tab navigation
 document.addEventListener('mouseup', function(e){
-  const visibleTabs = TAB_ORDER.filter(name => {
-    const panel = document.getElementById('tab-' + name);
-    return panel && panel.style.display !== 'none' || document.getElementById('tab-' + name)?.classList.contains('active');
-  });
-  // Get only tabs that are visible in the nav
-  const navTabs = Array.from(document.querySelectorAll('.app-tab')).filter(t=>t.style.display!=='none');
-  const navNames = navTabs.map(t => {
-    const onclick = t.getAttribute('onclick');
-    const match = onclick && onclick.match(/showTab\('([^']+)'/);
-    return match ? match[1] : null;
-  }).filter(Boolean);
-
-  if(e.button === 3){ // back
-    const prev = navNames[navNames.indexOf(TAB_ORDER[currentTabIndex]) - 1];
-    if(prev) showTab(prev, document.getElementById('tab'+prev.charAt(0).toUpperCase()+prev.slice(1)), true);
-  } else if(e.button === 4){ // forward
-    const next = navNames[navNames.indexOf(TAB_ORDER[currentTabIndex]) + 1];
-    if(next) showTab(next, document.getElementById('tab'+next.charAt(0).toUpperCase()+next.slice(1)), true);
+  if(e.button === 3){ // back button
+    const newIndex = Math.max(0, currentTabIndex - 1);
+    const name = TAB_ORDER[newIndex];
+    const btn = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
+    showTab(name, btn, true);
+    e.preventDefault();
+  } else if(e.button === 4){ // forward button
+    const newIndex = Math.min(TAB_ORDER.length - 1, currentTabIndex + 1);
+    const name = TAB_ORDER[newIndex];
+    const btn = document.getElementById('tab' + name.charAt(0).toUpperCase() + name.slice(1));
+    showTab(name, btn, true);
+    e.preventDefault();
   }
 });
+
+// Online counter — ping server every 30s to signal presence, fetch count every 15s
+function pingOnline(){
+  if(!isGuest && currentAccount) fetch('/api/ping', { method:'POST' }).catch(()=>{});
+}
+function fetchOnlineCount(){
+  fetch('/api/online-count').then(r=>r.json()).then(data=>{
+    if(data.count !== undefined) document.getElementById('onlineCount').textContent = data.count;
+  }).catch(()=>{});
+}
+setInterval(pingOnline, 30000);
+setInterval(fetchOnlineCount, 15000);
+fetchOnlineCount(); // fetch immediately on load
 
 // enter with Enter key on login
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
