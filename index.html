@@ -587,7 +587,39 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
 .dash-stat-lbl{font-size:.68rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text-muted);}
 @media(max-width:650px){.dash-grid{grid-template-columns:1fr;}.dash-stats-row{grid-template-columns:1fr 1fr;}}
 
-/* ── HOME TAB ── */
+/* ── MOBILE ── */
+@media(max-width:768px){
+  .app-nav{padding:0 .8rem;gap:.5rem;height:52px;}
+  .app-logo{font-size:.85rem;}
+  .nav-online{font-size:.65rem;padding:3px 7px;}
+  .tag-undetected{display:none;}
+  .app-tabs{
+    position:fixed;bottom:0;left:0;right:0;z-index:101;
+    display:flex;gap:0;
+    background:rgba(6,10,20,0.98);
+    border-top:1px solid var(--border);
+    overflow-x:auto;scrollbar-width:none;
+    height:52px;align-items:center;padding:0 .3rem;
+  }
+  .app-tabs::-webkit-scrollbar{display:none;}
+  .app-tab{flex-shrink:0;font-size:.7rem;padding:5px 10px;flex-direction:column;gap:2px;height:100%;border-radius:0;justify-content:center;}
+  .app-tab .tab-icon{font-size:1rem;}
+  .app-content{padding-top:54px;padding-bottom:60px;}
+  .tab-panel{padding:1.5rem 1rem;}
+  .shop-listing{grid-template-columns:1fr!important;}
+  .shop-listing-img{height:180px;}
+  .auth-card{margin:0 .5rem;}
+  #lobbyPage{padding:1rem;}
+  .home-hero{padding:2rem 1rem 1.5rem;}
+  .home-btns{flex-direction:column;align-items:center;}
+  .home-stats{gap:2rem;padding:1.5rem 1rem;}
+  .profile-layout{grid-template-columns:1fr!important;}
+  .dash-grid{grid-template-columns:1fr!important;}
+  .dash-meta-row{grid-template-columns:1fr 1fr;}
+  .edit-box{padding:1.5rem;}
+  .edit-row{grid-template-columns:1fr;}
+  .detail-layout{grid-template-columns:1fr!important;}
+}
 .home-hero{
   position:relative;min-height:60vh;
   display:flex;align-items:center;justify-content:center;
@@ -827,7 +859,23 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           </div>
         </div>
 
-        <div style="margin-top:2.5rem;text-align:center;padding-top:1.5rem;border-top:1px solid var(--border);">
+        <div style="margin-top:1.5rem;"></div>
+        <div class="shop-category-label">
+          <span class="shop-cat-icon">🤖</span> AI / Automation
+        </div>
+        <div class="shop-listing" style="margin-top:.8rem;opacity:.75;cursor:default;">
+          <div class="shop-listing-img" style="background:#040810;">
+            <img src="https://raw.githubusercontent.com/geggago/rose-shop/main/images/Rose AI.png" alt="Rose AI" style="width:100%;height:100%;object-fit:cover;opacity:.85;display:block;pointer-events:none;">
+            <span class="shop-badge-popular" style="background:rgba(139,10,42,0.85);">🚧 COMING SOON</span>
+          </div>
+          <div class="shop-listing-info">
+            <div class="shop-listing-name">Rose AI</div>
+            <div class="shop-listing-stars" style="color:var(--text-muted);">★★★★★ <span>—</span></div>
+            <div class="shop-listing-from">COMING SOON</div>
+            <div class="shop-listing-price" style="color:var(--text-muted);">TBA</div>
+            <button class="shop-listing-btn" style="opacity:.4;cursor:not-allowed;" disabled>Coming Soon</button>
+          </div>
+        </div>padding-top:1.5rem;border-top:1px solid var(--border);">
           <p style="font-size:.75rem;color:var(--text-muted);line-height:1.7;">
             By purchasing any product you agree to our <a href="#" onclick="document.getElementById('termsModal').style.display='flex'" style="color:var(--blue-light);text-decoration:none;font-weight:600;">Terms of Service</a>.<br>
             All software is exclusively for use on titles and applications you legally own.
@@ -868,14 +916,14 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
               <div style="font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.7rem;">Features</div>
               <ul style="list-style:none;display:flex;flex-direction:column;gap:.4rem;">
                 <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Script executor with full command library</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Memory scanner — find and edit any value</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Freeze system — lock values forever</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Thread system — run scripts on a loop automatically</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Live watchlist — monitor values in real time</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Hotkey support — bind scripts to F1–F12</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Script editor with save, load and rename</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Memory scanner & value editor</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Memory editor & custom binds</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Hotkey support with modifiers (Ctrl, Shift, Alt)</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Interactive in-game menu overlay (Insert)</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Live active binds HUD overlay</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Live watchlist & value monitor</li>
+                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Thread system & automated loops</li>
                 <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> F4 emergency stop</li>
-                <li style="font-size:.84rem;color:var(--text-dim);display:flex;align-items:flex-start;gap:8px;"><span style="color:var(--rose-bright);flex-shrink:0;">✦</span> Auto-login with license key saving</li>
               </ul>
             </div>
 
