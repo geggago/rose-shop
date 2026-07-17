@@ -826,11 +826,7 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
           </div>
         </div>
 
-        <div style="margin-top:1.5rem;"></div>
-        <div class="shop-category-label">
-          <span class="shop-cat-icon">🤖</span> AI / Automation
-        </div>
-        <div class="shop-listing" style="margin-top:.8rem;opacity:.75;cursor:default;">
+        <div class="shop-listing" style="margin-top:1rem;opacity:.75;cursor:default;">
           <div class="shop-listing-img" style="background:#040810;">
             <img src="https://raw.githubusercontent.com/geggago/rose-shop/main/images/Rose AI.png" alt="Rose AI" style="width:100%;height:100%;object-fit:cover;opacity:.85;display:block;pointer-events:none;">
             <span class="shop-badge-popular" style="background:rgba(139,10,42,0.85);">🚧 COMING SOON</span>
@@ -842,7 +838,9 @@ body{background:var(--deep);color:var(--text);font-family:'Inter',sans-serif;fon
             <div class="shop-listing-price" style="color:var(--text-muted);">TBA</div>
             <button class="shop-listing-btn" style="opacity:.4;cursor:not-allowed;" disabled>Coming Soon</button>
           </div>
-        </div>padding-top:1.5rem;border-top:1px solid var(--border);">
+        </div>
+
+        <div style="margin-top:2rem;padding-top:1.5rem;border-top:1px solid var(--border);">
           <p style="font-size:.75rem;color:var(--text-muted);line-height:1.7;">
             By purchasing any product you agree to our <a href="#" onclick="document.getElementById('termsModal').style.display='flex'" style="color:var(--blue-light);text-decoration:none;font-weight:600;">Terms of Service</a>.<br>
             All software is exclusively for use on titles and applications you legally own.
@@ -2678,8 +2676,8 @@ function showTab(name, btn, isManual=false){
 
   if(btn) btn.classList.add('active');
 
-  // scroll to top on tab change
-  window.scrollTo({top:0, behavior:'smooth'});
+  // scroll to top instantly on tab change
+  window.scrollTo({top:0, behavior:'instant'});
   if(name==='products') syncShopStock();
 }
 
